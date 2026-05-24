@@ -1,0 +1,63 @@
+<!-- hegselmann2005 hero. Vault SVG style contract (palette + dark mode). -->
+<svg width="100%" viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Hegselmann &amp; Krause 2005 — Opinion Dynamics Driven by Various Ways of Averaging</title>
+<desc>Initially scattered continuous opinions in [0,1] converge under bounded confidence into a few stable clusters; the choice of averaging operator (A/G/H/P/R) shapes whether the outcome is consensus, polarization, or plurality.</desc>
+<style>
+  .t  { font-family: -apple-system, "Helvetica Neue", "Hiragino Sans", sans-serif; font-size: 14px; fill: #2C2C2A; }
+  .ts { font-family: -apple-system, "Helvetica Neue", "Hiragino Sans", sans-serif; font-size: 13px; fill: #444441; }
+  .tl { font-family: -apple-system, "Helvetica Neue", "Hiragino Sans", sans-serif; font-size: 12px; font-weight: 600; fill: #534AB7; letter-spacing: 2px; }
+  .title { font-family: -apple-system, "Helvetica Neue", "Hiragino Sans", sans-serif; font-size: 28px; font-weight: 600; fill: #2C2C2A; }
+  .glab { font-family: -apple-system, "Helvetica Neue", "Hiragino Sans", sans-serif; font-size: 11px; font-weight: 500; fill: #888780; letter-spacing: 0.5px; }
+  .axis { stroke: #C7C5BD; stroke-width: 1; }
+  .traj { stroke: #534AB7; stroke-width: 1.4; fill: none; opacity: 0.55; }
+  .trajT { stroke: #0F6E56; stroke-width: 1.4; fill: none; opacity: 0.55; }
+  .dot { fill: #534AB7; }
+  .dotT { fill: #0F6E56; }
+  @media (prefers-color-scheme: dark) {
+    .t  { fill: #E5E5E2; }
+    .ts { fill: #C7C5BD; }
+    .tl { fill: #AFA9EC; }
+    .title { fill: #E5E5E2; }
+    .glab { fill: #8C8B85; }
+    .axis { stroke: #5F5E5A; }
+    .traj { stroke: #AFA9EC; }
+    .trajT { stroke: #5DCAA5; }
+    .dot { fill: #AFA9EC; }
+    .dotT { fill: #5DCAA5; }
+  }
+</style>
+
+<!-- left: label + title -->
+<text x="40" y="60" class="tl">OPINION DYNAMICS</text>
+<text x="40" y="96" class="title">Bounded Confidence</text>
+<text x="40" y="128" class="title">&amp; Various Means</text>
+<text x="40" y="162" class="ts">Hegselmann &amp; Krause (2005)</text>
+<text x="40" y="184" class="t">x_i(t+1) = M( { x_j : |x_i − x_j| ≤ ε } )</text>
+<text x="40" y="210" class="glab">M ∈ { A · G · H · P_p · R }</text>
+<text x="40" y="234" class="glab">consensus · polarization · plurality</text>
+
+<!-- right: opinion trajectory plot -->
+<g transform="translate(500, 40)">
+  <!-- axes -->
+  <line x1="0" y1="0" x2="0" y2="220" class="axis"/>
+  <line x1="0" y1="220" x2="360" y2="220" class="axis"/>
+  <text x="-8" y="6" class="glab" text-anchor="end">1</text>
+  <text x="-8" y="224" class="glab" text-anchor="end">0</text>
+  <text x="-30" y="118" class="glab" transform="rotate(-90 -30 118)" text-anchor="middle">opinion</text>
+  <text x="180" y="244" class="glab" text-anchor="middle">time t</text>
+
+  <!-- trajectories converging to an upper cluster (purple) -->
+  <path class="traj" d="M0 30 C 90 45, 180 70, 360 78"/>
+  <path class="traj" d="M0 70 C 90 72, 180 76, 360 78"/>
+  <path class="traj" d="M0 96 C 90 88, 180 80, 360 78"/>
+  <path class="traj" d="M0 52 C 90 60, 180 74, 360 78"/>
+  <circle cx="360" cy="78" r="4" class="dot"/>
+
+  <!-- trajectories converging to a lower cluster (teal) -->
+  <path class="trajT" d="M0 200 C 90 188, 180 172, 360 164"/>
+  <path class="trajT" d="M0 150 C 90 156, 180 162, 360 164"/>
+  <path class="trajT" d="M0 176 C 90 172, 180 166, 360 164"/>
+  <path class="trajT" d="M0 128 C 90 140, 180 158, 360 164"/>
+  <circle cx="360" cy="164" r="4" class="dotT"/>
+</g>
+</svg>
