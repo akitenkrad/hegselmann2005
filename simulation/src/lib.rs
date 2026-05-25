@@ -5,10 +5,11 @@
 //! 実行ドライバ (`simulation`)・集計メトリクス (`metrics`)・設定構造体 (`config`)
 //! をモジュールとして公開し，バイナリ (`hegselmann`) と統合テストの双方から利用する．
 //!
-//! 平均化操作の math (`MeanOperator` / `apply_mean` / `parse_mean`) は
-//! `socsim-social-dynamics` パック (本リポジトリから移植) を `means` で再エクスポート
-//! して共有する．有界信頼更新メカニズム (`mechanisms`) は信頼集合の構築順序を厳密に
-//! 保つためローカル実装を維持する (詳細は `mechanisms` のモジュールドキュメントを参照)．
+//! 平均化操作の math (`MeanOperator` / `apply_mean` / `parse_mean`) と有界信頼更新
+//! メカニズム (`HegselmannKrauseMechanism` / `ConvergenceMechanism`) はいずれも
+//! `socsim-social-dynamics` パック (本リポジトリから移植) を `means` / `mechanisms`
+//! で再エクスポートして共有する．パックの HK 実装は信頼集合を id 昇順 (自分を所定
+//! 位置に含む) で構築するため，旧ローカル実装と出力がビット等価である (socsim #42/#43)．
 
 pub mod config;
 pub mod means;

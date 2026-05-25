@@ -8,9 +8,10 @@ use rand::Rng;
 
 use socsim_core::{derive_seed, SimRng};
 use socsim_engine::{SequentialScheduler, SimulationBuilder};
+use socsim_social_dynamics::max_abs_delta;
 
 use crate::config::{Config, StartProfile};
-use crate::mechanisms::BoundedConfidenceUpdate;
+use crate::mechanisms::{ConvergenceMechanism, HegselmannKrauseMechanism};
 use crate::metrics::Metrics;
 use crate::world::OpinionWorld;
 
@@ -53,10 +54,16 @@ pub fn init_opinions(cfg: &Config, rng: &mut SimRng) -> Vec<f64> {
 /// シミュレーションを実行する．
 ///
 /// socsim の [`Simulation`](socsim_engine::Simulation) エンジンを駆動する．
-/// 更新規則は [`BoundedConfidenceUpdate`] が `Interaction` フェーズで同期適用し，
-/// 活性化順序は [`SequentialScheduler`] が id 昇順で与える (同期更新なので順序は
-/// 結果に無関係)．早期停止は決定論的平均が `max|Δx| < tol` で `request_stop`
-/// する．ランダム平均 R は収束判定を使わず最大反復まで回す．
+/// 更新規則は `socsim-social-dynamics` パックの [`HegselmannKrauseMechanism`] が
+/// `Interaction` フェーズで同期適用し，活性化順序は [`SequentialScheduler`] が
+/// id 昇順で与える (同期更新なので順序は結果に無関係)．早期停止は決定論的平均
+/// (A/G/H/P) のときのみパックの [`ConvergenceMechanism`] を `PostStep` フェーズに
+/// 配線して `max|Δx| < tol` で `request_stop` する．ランダム平均 R は収束判定を
+/// 使わず最大反復まで回す．
+///
+/// `max_delta` (および収束フラグ) はメカニズムではなくドライバ側で，観測した連続
+/// ステップの意見スナップショット間 [`max_abs_delta`] として算出する (id 昇順の
+/// 要素差なので旧ローカル実装とビット等価)．
 pub fn run(cfg: &Config) -> SimulationResult {
     let root = cfg.seed.unwrap_or_else(rand::random);
 
@@ -71,11 +78,15 @@ pub fn run(cfg: &Config) -> SimulationResult {
         cfg.mean,
         cfg.max_iterations as u64,
     );
-    let mut sim = SimulationBuilder::new(world)
+    let mut builder = SimulationBuilder::new(world)
         .scheduler(Box::new(SequentialScheduler))
         .seed(derive_seed(root, &[RNG_ENGINE]))
-        .add_mechanism(Box::new(BoundedConfidenceUpdate { tol: cfg.tol }))
-        .build();
+        .add_mechanism(Box::new(HegselmannKrauseMechanism::new(cfg.eps, cfg.mean)));
+    // 決定論的平均のみ収束で早期停止する (R は最大反復まで回す)．
+    if cfg.mean.is_deterministic() {
+        builder = builder.add_mechanism(Box::new(ConvergenceMechanism::new(cfg.tol)));
+    }
+    let mut sim = builder.build();
 
     let mut metrics_history: Vec<Metrics> = Vec::new();
     let mut opinion_history: Vec<Vec<f64>> = Vec::new();
@@ -86,22 +97,22 @@ pub fn run(cfg: &Config) -> SimulationResult {
 
     let mut converged = false;
     let mut final_iteration = cfg.max_iterations;
+    let deterministic = cfg.mean.is_deterministic();
 
     sim.run_observed(|report| {
         let t = report.t as usize;
-        let max_delta = *report
-            .scratch
-            .get::<f64>("max_delta")
-            .expect("max_delta が scratch に存在しません");
-        let step_converged = *report
-            .scratch
-            .get::<bool>("converged")
-            .expect("converged が scratch に存在しません");
+        // 連続ステップ間の最大変位 (id 昇順の要素差; 旧 BoundedConfidenceUpdate の
+        // ステップ内 max|x_new − x_old| とビット等価)．
+        let prev = opinion_history
+            .last()
+            .expect("opinion_history は t=0 を含む");
+        let max_delta = max_abs_delta(prev, &report.world.opinions);
 
         metrics_history.push(Metrics::compute(&report.world.opinions, t, max_delta));
         opinion_history.push(report.world.opinions.clone());
 
-        converged = step_converged;
+        // 決定論的平均が不動点に到達したか (R では常に false)．
+        converged = deterministic && max_delta < cfg.tol;
         final_iteration = t;
     })
     .expect("シミュレーションの実行に失敗");
