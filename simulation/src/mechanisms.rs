@@ -1,8 +1,8 @@
-//! 有界信頼更新メカニズム (socsim-social-dynamics パックへ移譲)．
+//! 有界信頼更新メカニズム (socsim-mechanisms パックへ移譲)．
 //!
 //! Hegselmann & Krause (2005) の一般化モデル (式(2)) を `Interaction` フェーズで
 //! **同期更新** (synchronous / simultaneous) する更新規則は，かつて本 crate 内で
-//! `BoundedConfidenceUpdate` として自前実装していたが，`socsim-social-dynamics`
+//! `BoundedConfidenceUpdate` として自前実装していたが，`socsim-mechanisms`
 //! パックの [`HegselmannKrauseMechanism`] へ移植・共有化された．本リポジトリは
 //! 当該パック実装をそのまま再エクスポートして利用する．
 //!
@@ -16,4 +16,4 @@
 //! パックの [`ConvergenceMechanism`] を `PostStep` フェーズに配線して `request_stop`
 //! し，ランダム平均 R は収束判定を使わず最大反復まで回す (論文 Observation 6, Fact 5)．
 
-pub use socsim_social_dynamics::{ConvergenceMechanism, HegselmannKrauseMechanism};
+pub use socsim_mechanisms::{ConvergenceMechanism, HegselmannKrauseMechanism};

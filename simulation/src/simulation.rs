@@ -8,7 +8,7 @@ use rand::Rng;
 
 use socsim_core::{derive_seed, SimRng};
 use socsim_engine::{SequentialScheduler, SimulationBuilder};
-use socsim_social_dynamics::max_abs_delta;
+use socsim_mechanisms::max_abs_delta;
 
 use crate::config::{Config, StartProfile};
 use crate::mechanisms::{ConvergenceMechanism, HegselmannKrauseMechanism};
@@ -54,7 +54,7 @@ pub fn init_opinions(cfg: &Config, rng: &mut SimRng) -> Vec<f64> {
 /// シミュレーションを実行する．
 ///
 /// socsim の [`Simulation`](socsim_engine::Simulation) エンジンを駆動する．
-/// 更新規則は `socsim-social-dynamics` パックの [`HegselmannKrauseMechanism`] が
+/// 更新規則は `socsim-mechanisms` パックの [`HegselmannKrauseMechanism`] が
 /// `Interaction` フェーズで同期適用し，活性化順序は [`SequentialScheduler`] が
 /// id 昇順で与える (同期更新なので順序は結果に無関係)．早期停止は決定論的平均
 /// (A/G/H/P) のときのみパックの [`ConvergenceMechanism`] を `PostStep` フェーズに

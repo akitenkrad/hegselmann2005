@@ -24,7 +24,7 @@ socsim-core    = { git = "https://github.com/akitenkrad/rs-social-simulation-too
 socsim-engine  = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-engine" }
 # 意見力学パック (Hegselmann–Krause メカニズム + MeanOperator)．本リポジトリの
 # means.rs/world.rs から移植されたものを再利用する (ローカルの自前 HK を置換)．
-socsim-social-dynamics = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-social-dynamics" }
+socsim-mechanisms = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-mechanisms" }
 # 出力 (timestamp / latest シンボリックリンク / serde CSV・pretty JSON 書き出し) の
 # 共有ヘルパ．非 LLM モデルのため socsim-results のみ (socsim-llm は不要)．
 socsim-results = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-results" }

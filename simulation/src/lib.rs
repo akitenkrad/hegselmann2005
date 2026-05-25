@@ -7,7 +7,7 @@
 //!
 //! 平均化操作の math (`MeanOperator` / `apply_mean` / `parse_mean`) と有界信頼更新
 //! メカニズム (`HegselmannKrauseMechanism` / `ConvergenceMechanism`) はいずれも
-//! `socsim-social-dynamics` パック (本リポジトリから移植) を `means` / `mechanisms`
+//! `socsim-mechanisms` パック (本リポジトリから移植) を `means` / `mechanisms`
 //! で再エクスポートして共有する．パックの HK 実装は信頼集合を id 昇順 (自分を所定
 //! 位置に含む) で構築するため，旧ローカル実装と出力がビット等価である (socsim #42/#43)．
 
