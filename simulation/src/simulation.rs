@@ -1,6 +1,6 @@
 //! 初期化と実行ドライバ (SimulationBuilder 配線)．
 
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::BufWriter;
 
 use csv::Writer;
@@ -131,19 +131,18 @@ pub fn save_opinions(opinion_history: &[Vec<f64>], output_dir: &str) {
 }
 
 /// メトリクス履歴を CSV に保存する．
+///
+/// 書き出し機構は `socsim_results::write_csv` に委譲する (各行を `serialize` し
+/// 先頭行にヘッダを書く csv クレットの標準挙動; 従来の手書き writer とバイト等価)．
+/// 行構造体 [`Metrics`] は repo 固有のままで，writer だけを共有化する．
 pub fn save_metrics(metrics: &[Metrics], output_dir: &str) {
     let path = format!("{}/metrics.csv", output_dir);
-    let file = File::create(&path).expect("metrics.csv の作成に失敗");
-    let mut wtr = Writer::from_writer(BufWriter::new(file));
-    for m in metrics {
-        wtr.serialize(m).expect("メトリクス書き込みに失敗");
-    }
-    wtr.flush().expect("フラッシュに失敗");
+    socsim_results::write_csv(metrics, &path).expect("metrics.csv の書き込みに失敗");
 }
 
 /// 出力ディレクトリを作成する．
 pub fn ensure_output_dir(output_dir: &str) {
-    fs::create_dir_all(output_dir).expect("出力ディレクトリの作成に失敗");
+    socsim_results::ensure_dir(output_dir).expect("出力ディレクトリの作成に失敗");
 }
 
 #[cfg(test)]
