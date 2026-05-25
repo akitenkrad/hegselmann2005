@@ -6,11 +6,11 @@
 //! したがって `socsim-grid` / `socsim-net` は不使用である．
 //!
 //! BC モデルの「近傍」(信頼集合) は固定位相ではなく，意見距離
-//! `|x_i - x_j| ≤ ε` で毎ステップ動的に決まる完全グラフ上の部分集合であり，
-//! 更新メカニズム ([`crate::mechanisms::BoundedConfidenceUpdate`]) 内で
-//! 全エージェント走査により計算する．
+//! `|x_i - x_j| ≤ ε` で毎ステップ動的に決まる完全グラフ上の部分集合である．
+//! [`Neighbors`] は完全グラフとして「自分以外の全エージェント」を返し，ε による
+//! 信頼集合の絞り込みはパックの `HegselmannKrauseMechanism` 内で行われる．
 
-use socsim_core::{AgentId, SimClock, WorldState};
+use socsim_core::{AgentId, Neighbors, ScalarOpinions, SimClock, WorldState};
 
 use crate::means::MeanOperator;
 
@@ -26,8 +26,6 @@ pub struct OpinionWorld {
     pub eps: f64,
     /// 平均化操作 (A / G / H / P{p} / R)．
     pub mean: MeanOperator,
-    /// 直近ステップの `max|Δx_i|` (収束判定用)．初期値は +∞．
-    pub last_max_delta: f64,
 }
 
 impl OpinionWorld {
@@ -40,7 +38,6 @@ impl OpinionWorld {
             opinions,
             eps,
             mean,
-            last_max_delta: f64::INFINITY,
         }
     }
 
@@ -62,5 +59,23 @@ impl WorldState for OpinionWorld {
 
     fn clock_mut(&mut self) -> &mut SimClock {
         &mut self.clock
+    }
+}
+
+impl ScalarOpinions for OpinionWorld {
+    fn opinion(&self, id: AgentId) -> f64 {
+        self.opinions[id.0 as usize]
+    }
+
+    fn set_opinion(&mut self, id: AgentId, value: f64) {
+        self.opinions[id.0 as usize] = value;
+    }
+}
+
+impl Neighbors for OpinionWorld {
+    /// 完全グラフ・非空間モデルなので「近傍」は自分以外の全エージェント (id 昇順)．
+    /// HK メカニズムが自分自身を信頼集合へ追加するため，ここでは自分を除く．
+    fn neighbors_of(&self, id: AgentId) -> Vec<AgentId> {
+        self.agents.iter().copied().filter(|&a| a != id).collect()
     }
 }

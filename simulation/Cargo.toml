@@ -22,6 +22,9 @@ clap        = { version = "4.5", features = ["derive"] }
 # Phase 3 ネットワーク版で socsim-net を追加する余地がある．
 socsim-core    = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-core" }
 socsim-engine  = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-engine" }
+# 意見力学パック (Hegselmann–Krause メカニズム + MeanOperator)．本リポジトリの
+# means.rs/world.rs から移植されたものを再利用する (ローカルの自前 HK を置換)．
+socsim-social-dynamics = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-social-dynamics" }
 # 出力 (timestamp / latest シンボリックリンク / serde CSV・pretty JSON 書き出し) の
 # 共有ヘルパ．非 LLM モデルのため socsim-results のみ (socsim-llm は不要)．
 socsim-results = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-results" }

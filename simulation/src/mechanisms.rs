@@ -19,6 +19,13 @@
 //! [`StepContext::request_stop`] でエンジンに停止を要求する．**ランダム平均 R** は
 //! 毎ステップ非決定的に動くため収束判定を使わず，最大反復まで回す
 //! (論文 Observation 6, Fact 5)．
+//!
+//! 平均化操作の math (`MeanOperator` / `apply_mean`) は `socsim-social-dynamics`
+//! パックへ移植・共有化された (本リポジトリの means.rs を再エクスポート)．本メカニズム
+//! は信頼集合の構築順序 (id 昇順・自分を所定位置に含む) を厳密に保つため，パックの
+//! `HegselmannKrauseMechanism` ではなくローカル実装を維持する: パックは自分を先頭に
+//! 置く構築順序のため，浮動小数点の総和順序が変わり metrics.csv の `max_delta`
+//! (および幾何平均の variance) が ulp レベルで非バイト等価になる．
 
 use socsim_core::{Mechanism, Phase, Result, StepContext};
 
@@ -73,7 +80,6 @@ impl Mechanism<OpinionWorld> for BoundedConfidenceUpdate {
 
         // 一括書き戻し (同期更新)．
         ctx.world.opinions = new_opinions;
-        ctx.world.last_max_delta = max_delta;
 
         // ドライバ用にステップ結果を scratch へ．
         ctx.scratch.insert("max_delta", max_delta);
