@@ -31,7 +31,7 @@ uv run hegselmann-tools visualize
 
 ## Scope
 
-This repository currently implements **Phase 1** (the core bounded-confidence model with A/G/H/P/R averaging on the complete graph; the `run` subcommand; the three-phase transition) and **Phase 2** (the `sweep` over ε plus the Python `visualize` / `visualize-sweep` tools). A network variant (`socsim-net`), a one-shot paper reproduction (`reproduce`), and analytic PAM-levelling checks are left as future work (Phase 3); clean extension points are kept throughout.
+This repository implements the core bounded-confidence model with A/G/H/P/R averaging on the complete graph (the `run` subcommand and the three-phase transition), the `sweep` over ε with the Python `visualize` / `visualize-sweep` tools, and a one-shot `reproduce` that runs the paper's headline experiments and renders the figures with an observed-vs-expected per-operator regime check. A network variant on `socsim-net` and analytic PAM-levelling checks are possible extensions; clean extension points are kept throughout.
 
 ## License
 

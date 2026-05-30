@@ -86,9 +86,9 @@ A/G/H/P are deterministic and request a stop once `max|Δx| < tol`. R is non-det
 
 For a given seed the run is deterministic (same opinion trajectory). For A/G/H/P the run is fully deterministic (no RNG inside the step); for R the RNG stream (engine seed) is fixed by the seed, so R is also reproducible per seed.
 
-## Future extensions (Phase 3)
+## Paper reproduction
 
-The design keeps clean extension points for: a network variant (`socsim-net`, ER/WS/BA) where the confidence set becomes `network neighborhood ∩ opinion distance`; a one-shot paper reproduction (`reproduce`, Fig. 3–7); and analytic PAM-levelling checks. None of these are implemented here.
+The `reproduce` subcommand orchestrates the Rust binary across the paper's headline experiments and renders the figures with an observed-vs-expected per-operator regime check (see the [Visualization](visualization.md) doc). The design also keeps clean extension points for a network variant (`socsim-net`, ER/WS/BA) where the confidence set becomes `network neighborhood ∩ opinion distance`, and for analytic PAM-levelling checks.
 
 ## References
 

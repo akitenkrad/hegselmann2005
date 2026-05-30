@@ -33,6 +33,10 @@ main = build_dispatcher(
             "実行結果ディレクトリの設定 (config.json / sweep_config.json) の表示",
             "hegselmann_tools.show_experiment_settings:main",
         ),
+        "reproduce": (
+            "論文の主要 Figure (operators / a_regimes / sweep) の一括再現",
+            "hegselmann_tools.reproduce_paper:main",
+        ),
     },
 )
 

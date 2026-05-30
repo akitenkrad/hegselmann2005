@@ -27,6 +27,13 @@
 
 4. **収束速度の調査．** A/G/H/P は速やかに安定する (しばしば 20 ステップ未満) のに対し，ランダム平均 R は数千ステップ後でも不安定なことがある．`metrics.csv` の `max_delta` 列がステップごとの最大意見変化量を記録する．
 
+5. **論文の主要 Figure を 1 コマンドで再現．** `reproduce` を実行すると，演算子比較グリッド・算術平均の三相転移・ε 相図を描き，それぞれを論文の期待相と突き合わせる．[可視化 → reproduce](visualization.ja.md) を参照．
+
+   ```bash
+   uv run hegselmann-tools reproduce            # 論文値でフル再現
+   uv run hegselmann-tools reproduce --quick    # 高速スモーク実行
+   ```
+
 ## 次に読むもの
 
 - [CLI](cli.ja.md) — `run` / `sweep` の全フラグリファレンス．

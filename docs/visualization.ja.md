@@ -9,9 +9,10 @@ uv sync
 uv run hegselmann-tools visualize
 uv run hegselmann-tools visualize-sweep
 uv run hegselmann-tools show-experiment-settings --results-dir results/latest
+uv run hegselmann-tools reproduce
 ```
 
-CLI は argparse で 3 つのサブコマンドへディスパッチする．サブコマンド以降の引数は対応モジュールへそのまま渡される．
+CLI は argparse で 4 つのサブコマンドへディスパッチする．サブコマンド以降の引数は対応モジュールへそのまま渡される．
 
 ## `visualize` — 意見軌跡
 
@@ -53,6 +54,33 @@ results ディレクトリ配下の `config.json` (run) または `sweep_config.
 uv run hegselmann-tools show-experiment-settings --results-dir results/latest
 uv run hegselmann-tools show-experiment-settings --results-dir results/latest --json
 ```
+
+## `reproduce` — 論文 Figure の一括再現
+
+論文の主要実験を 1 コマンドで横断実行し，図と機械可読なサマリを出力する．Rust バイナリ (`cargo run --release -- run / sweep …`) を連結して呼び出し，生成 CSV を読んで PNG を描き，観測された演算子ごとの相を論文の期待相と突き合わせる．
+
+```bash
+uv run hegselmann-tools reproduce              # 論文値でフル再現 (n=625)
+uv run hegselmann-tools reproduce --quick      # 高速スモーク実行 (n=200，試行数縮小)
+uv run hegselmann-tools reproduce --specs operators,sweep
+uv run hegselmann-tools reproduce --skip-build # ビルド済みなら build をスキップ
+```
+
+出力は `results/reproduce_{YYYYMMDD_HHMMSS}/` 配下に置かれる:
+
+- `figures/operators_eps0.15_grid.png` — `ε=0.15` 固定で `A / G / H / P0.01 / P100 / R` の意見軌跡を 2×3 グリッドに並べ，平均演算子だけで定常状態の相が変わることを示す (論文 §3, Fig. 4–7)．算術平均 `A` は分極，高指数のべき平均 `P100` は単一の高位クラスタへ収束，ランダム平均 `R` は決してクラスタ化しない (拡散のまま)．
+- `figures/a_regimes_eps_sweep.png` — 算術平均 `A` を `ε = 0.05 / 0.15 / 0.25` で実行し，1 つの演算子で `ε` を上げると 多元 → 分極 → 合意 へ遷移する三相転移を示す．
+- `figures/sweep_phase_diagram.png` — 演算子ごとの占有クラス数 vs ε (log y) と合意ブリンク ε* の棒グラフ (論文 Observation 1, Fact 4)．
+- `reproduce_summary.json` — spec ごとに cargo 呼び出し・出力ディレクトリ・図パスと，観測値と期待値の突き合わせを記録する．各演算子パネルは期待相・観測相・占有クラス数・`pass` フラグを持ち，spec には `PASS` / `off` の判定が付く．sweep spec は演算子ごとの合意ブリンク ε* を記録する．
+
+| フラグ | 既定値 | 説明 |
+|---|---|---|
+| `--specs` | 全て | 実行する spec ID をカンマ区切りで指定 (`operators`, `a_regimes`, `sweep`) |
+| `--output-dir` | results | 出力ルート (workspace ルートからの相対) |
+| `--cargo-output-dir` | `{output-dir}` | Rust の `--output-dir` に渡すディレクトリ |
+| `--workspace-root` | 推定 | workspace ルート (`HEGSELMANN_PROJECT_ROOT` でも上書き可) |
+| `--quick` | off | `n` と試行数を縮小して高速実行 |
+| `--skip-build` | off | `cargo build --release` をスキップ |
 
 ## フォントについて
 

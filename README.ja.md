@@ -31,7 +31,7 @@ uv run hegselmann-tools visualize
 
 ## スコープ
 
-本リポジトリは現在 **Phase 1** (完全グラフ上の A/G/H/P/R 切替の有界信頼モデル，`run` サブコマンド，三相転移の基本再現) と **Phase 2** (ε の `sweep` および Python の `visualize` / `visualize-sweep` ツール) を実装している．ネットワーク版 (`socsim-net`)，論文一括再現 (`reproduce`)，PAM levelling の解析的検証は将来作業 (Phase 3) とし，拡張点を随所に残している．
+本リポジトリは，完全グラフ上の A/G/H/P/R 切替の有界信頼モデル (`run` サブコマンドと三相転移)，ε の `sweep` と Python の `visualize` / `visualize-sweep` ツール，および論文の主要実験を横断実行して図を描き演算子ごとの相を期待値と突き合わせる一括再現 `reproduce` を実装している．`socsim-net` 上のネットワーク版と PAM levelling の解析的検証は拡張候補であり，拡張点を随所に残している．
 
 ## ライセンス
 
