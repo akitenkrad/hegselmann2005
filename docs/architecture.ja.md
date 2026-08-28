@@ -10,7 +10,7 @@ Cargo workspace + uv workspace の 2 プロジェクト構成．
 hegselmann2005/
 ├── Cargo.toml                 # Cargo workspace ルート
 ├── pyproject.toml             # uv workspace ルート
-├── simulation/                # Rust プロジェクト (hegselmann-opinion-simulation)
+├── simulation/                # Rust プロジェクト (hegselmann-simulation)
 │   ├── Cargo.toml
 │   ├── src/
 │   │   ├── main.rs            # CLI (run / sweep)

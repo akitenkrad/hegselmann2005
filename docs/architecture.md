@@ -10,7 +10,7 @@ A two-project layout: a Cargo workspace + a uv workspace.
 hegselmann2005/
 ├── Cargo.toml                 # Cargo workspace root
 ├── pyproject.toml             # uv workspace root
-├── simulation/                # Rust project (hegselmann-opinion-simulation)
+├── simulation/                # Rust project (hegselmann-simulation)
 │   ├── Cargo.toml
 │   ├── src/
 │   │   ├── main.rs            # CLI (run / sweep)
