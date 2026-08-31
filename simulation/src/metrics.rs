@@ -3,8 +3,6 @@
 //! 論文 §3 のベンチマークに対応する指標を計算する．中心は
 //! [`n_occupied_classes`] (生存意見数) と [`Phase`] 分類 (合意/分極/多元)．
 
-use serde::Serialize;
-
 /// 占有クラスの分割解像度 (論文の `10^-4` 刻みに対応)．
 pub const CLASS_RESOLUTION: f64 = 1e-4;
 
@@ -81,8 +79,13 @@ pub fn variance(opinions: &[f64]) -> f64 {
     opinions.iter().map(|&x| (x - m) * (x - m)).sum::<f64>() / opinions.len() as f64
 }
 
-/// 1 ステップ分のメトリクス (metrics.csv の 1 行)．
-#[derive(Debug, Clone, Serialize)]
+/// 1 ステップ分のメトリクス．
+///
+/// runvault の `metrics.csv` は long 形式なので，この構造体がそのまま 1 行に
+/// なるわけではない．`crate::record::log_step` が数値フィールドを名前つきの
+/// 指標へ展開する ([`Metrics::phase`] だけは category なので指標にならず，
+/// 終端イベントのラベルとして書かれる)．
+#[derive(Debug, Clone)]
 pub struct Metrics {
     /// ステップ番号 t．
     pub t: usize,

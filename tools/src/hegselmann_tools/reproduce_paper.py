@@ -3,8 +3,13 @@
 Hegselmann & Krause (2005)「Opinion Dynamics Driven by Various Ways of
 Averaging」(*Computational Economics* 25, 381–405) の主要な定性的結論を，
 Rust バイナリ (`cargo run --release -- run / sweep ...`) の単発呼び出しを
-連結して一括再現する．各 Figure ごとに対応する CSV を読み込み，PNG を
+連結して一括再現する．各 Figure ごとに対応するデータを読み込み，PNG を
 `results/reproduce_<timestamp>/figures/` に集約する．
+
+中間データ (`artifacts/opinions.csv` / `metrics.csv` / `events.jsonl`) は
+runvault の run ディレクトリ (`results/hegselmann-averaging/<run_slug>/`) に残り，
+`reproduce_summary.json` にそのパスが記録される．どの run が今の呼び出しの
+出力かは runvault に聞くので，ディレクトリ名や mtime から推測しない．
 
 論文の中心的主張 (§3, Observation 1, Fact 4, Fig. 4–7) は「同じ ε でも平均演算子
 の選び方が定常状態の相 (合意 / 分極 / 多元) を切り替える」というものである．
@@ -45,7 +50,9 @@ from typing import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
+from runvault.read import artifacts_dir, runvault_path
 
+from hegselmann_tools.experiment import EXPERIMENT
 from hegselmann_tools.visualize import load_metrics, load_opinions, to_wide
 from hegselmann_tools.visualize_sweep import (
     aggregate,
@@ -130,65 +137,44 @@ def ensure_build() -> None:
 
 
 def run_cargo(args: list[str], output_dir: Path) -> Path:
-    """`cargo run --release -- ...` を呼び出し，生成されたタイムスタンプサブ
-    ディレクトリ (`results/<ts>` / `results/<ts>_sweep`) を返す．
+    """`cargo run --release -- ...` を呼び出し，その run ディレクトリを返す．
 
-    Rust 側は秒解像度のタイムスタンプ (`%Y%m%d_%H%M%S`) でディレクトリを作る
-    ため，同一秒内に複数 spec を連続で走らせるとディレクトリ名が衝突する．本
-    ラッパは呼び出し直前に秒境界へスリープし，呼び出し時刻より新しい mtime を
-    持つディレクトリを「この呼び出しの出力」として採用する．
+    どこに落ちたかは runvault に聞く (`runvault path --latest`)．出力先は
+    `<output_dir>/hegselmann-averaging/<run_slug>/` で，run_slug には条件と環境の
+    ハッシュが入るため，こちら側で名前を組み立てることも，mtime で当てにいく
+    こともできない (できたとしてもすべきでない — 名前の決め方は runvault の
+    持ちものである)．
+
+    `run` は `--standalone` で絞る．スイープの子は別サブコマンド
+    (`sweep-point`) なので混ざらないが，`run` を手で連続実行したときに
+    «最後に走った run» を返す契約であることを明示しておく．
 
     Args:
         args: cargo の `--` 以降に渡す引数列．先頭は `run` / `sweep`．
         output_dir: `--output-dir` に渡すディレクトリ (workspace 相対 or 絶対)．
 
     Returns:
-        生成された結果ディレクトリ (絶対パス)．
+        この呼び出しが作った run ディレクトリ (絶対パス)．
     """
-    output_dir_str = str(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    is_sweep = bool(args) and args[0] == "sweep"
-
-    # 秒境界に確実に乗るよう，次の秒に入るまで小さく待つ (最大 1 秒)．
-    now = time.time()
-    sleep_for = 1.05 - (now - int(now))
-    if sleep_for > 0:
-        time.sleep(sleep_for)
-
-    call_start = time.time()
+    subcommand = args[0] if args else "run"
 
     cmd = (
         ["cargo", "run", "--release", "--quiet", "--"]
         + args
-        + ["--output-dir", output_dir_str]
+        + ["--output-dir", str(output_dir)]
     )
     subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, stdout=subprocess.DEVNULL)
 
-    # 呼び出し開始時刻より新しい mtime を持つディレクトリを探す．
-    candidates = []
-    for p in output_dir.iterdir():
-        if not p.is_dir() or p.name == "latest" or p.name.startswith("reproduce_"):
-            continue
-        # sweep のときは `*_sweep` のみ，run のときは `_sweep` を除外．
-        if is_sweep and not p.name.endswith("_sweep"):
-            continue
-        if (not is_sweep) and p.name.endswith("_sweep"):
-            continue
-        try:
-            mtime = p.stat().st_mtime
-        except OSError:
-            continue
-        if mtime + 1e-6 >= call_start:
-            candidates.append((mtime, p))
-
-    if not candidates:
-        raise RuntimeError(
-            f"cargo 呼び出し後に新規サブディレクトリが見つかりません: {output_dir} "
-            f"(args={args})"
+    return Path(
+        runvault_path(
+            EXPERIMENT,
+            str(output_dir),
+            subcommand=subcommand,
+            standalone=(subcommand == "run"),
         )
-    candidates.sort(key=lambda x: x[0])
-    return candidates[-1][1]
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -232,7 +218,7 @@ def observe_run(run_dir: Path) -> dict:
 def _draw_trajectory(ax, run_dir: Path, title: str) -> None:
     """1 つの run の意見軌跡を 1 つの軸に描く (グリッドのパネル用)．"""
     ax.set_facecolor(COLOR_BG)
-    df_op = load_opinions(str(run_dir / "opinions.csv"))
+    df_op = load_opinions(os.path.join(artifacts_dir(run_dir), "opinions.csv"))
     ts, mat = to_wide(df_op)
     n_agents = mat.shape[1]
     alpha = max(0.04, min(0.6, 30.0 / max(n_agents, 1)))
@@ -721,8 +707,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--cargo-output-dir", "--cargo_output_dir", default=None,
         help=(
-            "cargo の --output-dir に渡すパス．未指定時は --output-dir と同じ "
-            "(Rust 出力は results/<inner_ts>/ に置かれる)．"
+            "cargo の --output-dir に渡すパス (runvault の results ルート)．未指定時は "
+            "--output-dir と同じ (run は results/hegselmann-averaging/<run_slug>/ に置かれる)．"
         ),
     )
     p.add_argument(

@@ -25,6 +25,9 @@ socsim-engine  = { git = "https://github.com/akitenkrad/rs-social-simulation-too
 # 意見力学パック (Hegselmann–Krause メカニズム + MeanOperator)．本リポジトリの
 # means.rs/world.rs から移植されたものを再利用する (ローカルの自前 HK を置換)．
 socsim-mechanisms = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-mechanisms" }
-# 出力 (timestamp / latest シンボリックリンク / serde CSV・pretty JSON 書き出し) の
-# 共有ヘルパ．非 LLM モデルのため socsim-results のみ (socsim-llm は不要)．
-socsim-results = { git = "https://github.com/akitenkrad/rs-social-simulation-tools", branch = "main", package = "socsim-results" }
+
+# runvault — 実験記録基盤．run ディレクトリ・config.json・metrics.csv・events.jsonl・
+# manifest を持つ．出力の置き場と同一性はこちらに預けるので，socsim-results
+# (timestamp / latest シンボリックリンク / CSV・JSON 書き出し) はもう使わない．
+# git 依存．具体的な commit は Cargo.lock で固定される．
+runvault = { git = "https://github.com/akitenkrad/rs-runvault", branch = "main" }

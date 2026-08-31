@@ -18,14 +18,14 @@ cargo run --release -- run --n 625 --eps 0.15 --mean A --seed 42
 # Python 可視化ツールのインストール (workspace ルートで)
 uv sync
 
-# 最新の実行結果を可視化 (意見軌跡 + メトリクス)
+# 最新の実行結果を可視化 (runvault path --latest が run を選ぶ)
 uv run hegselmann-tools visualize
 ```
 
 ## ドキュメント
 
 - [ユースケース](docs/usecases.ja.md) — 本プロジェクトでできること．他ドキュメントへの導線．
-- [CLI](docs/cli.ja.md) — Rust CLI の `run` / `sweep` サブコマンドとフラグ．
+- [CLI](docs/cli.ja.md) — Rust CLI の `run` / `sweep` サブコマンドとフラグ，`results/` 配下の runvault run の構成．
 - [可視化](docs/visualization.ja.md) — Python `hegselmann-tools` と出力の読み方．
 - [アーキテクチャ](docs/architecture.ja.md) — リポジトリ構成，socsim フレームワーク，平均演算子，参考文献．
 

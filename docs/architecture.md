@@ -15,11 +15,12 @@ hegselmann2005/
 │   ├── src/
 │   │   ├── main.rs            # CLI (run / sweep)
 │   │   ├── lib.rs             # module re-exports for the binary + integration tests
-│   │   ├── config.rs          # Config + config.json serialization
+│   │   ├── config.rs          # Config + runvault parameters serialization
 │   │   ├── means.rs           # MeanOperator enum (A/G/H/P/R) + apply_mean + parser
 │   │   ├── world.rs           # socsim WorldState impl (OpinionWorld, complete graph)
 │   │   ├── mechanisms.rs      # socsim Mechanism impl (BoundedConfidenceUpdate, synchronous)
 │   │   ├── metrics.rs         # occupied classes, phase classification, consensus brink
+│   │   ├── record.rs          # recording into runvault (paper metadata / metrics / terminal events)
 │   │   └── simulation.rs      # init + run driver (SimulationBuilder wiring)
 │   └── tests/
 │       └── integration_test.rs
@@ -27,10 +28,11 @@ hegselmann2005/
 │   ├── pyproject.toml
 │   └── src/hegselmann_tools/
 │       ├── cli.py                       # unified CLI (hegselmann-tools)
+│       ├── experiment.py                # the runvault experiment name, in one place
 │       ├── visualize.py                 # opinion trajectory + metrics
 │       ├── visualize_sweep.py           # occupied-classes phase diagram + consensus brink
 │       └── show_experiment_settings.py  # display run / sweep settings
-└── results/                   # simulation output (gitignored)
+└── results/                   # runvault run directories (gitignored)
 ```
 
 - `cargo run` launches the `simulation` crate from the workspace root.
@@ -38,7 +40,7 @@ hegselmann2005/
 
 ## Model on the socsim framework
 
-The simulation engine is built on the social-simulation framework [rs-social-simulation-tools](https://github.com/akitenkrad/rs-social-simulation-tools) (socsim) — a git dependency, with the commit pinned in `Cargo.lock`. Because the canonical Hegselmann–Krause model is a **complete graph / non-spatial** model, only `socsim-core` (traits) and `socsim-engine` (Simulation / Builder) are used — there is **no `socsim-grid` and no `socsim-net`**.
+The simulation engine is built on the social-simulation framework [rs-social-simulation-tools](https://github.com/akitenkrad/rs-social-simulation-tools) (socsim) — a git dependency, with the commit pinned in `Cargo.lock`. Because the canonical Hegselmann–Krause model is a **complete graph / non-spatial** model, only `socsim-core` (traits), `socsim-engine` (Simulation / Builder) and `socsim-mechanisms` (the HK / mean pack) are used — there is **no `socsim-grid` and no `socsim-net`**. Where the output goes, and its identity, belong to [runvault](https://github.com/akitenkrad/rs-runvault), so `socsim-results` (timestamps, the `latest` symlink, CSV/JSON writing) is not used either.
 
 The socsim APIs used:
 

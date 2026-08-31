@@ -2,13 +2,13 @@
 
 # 可視化
 
-Python パッケージ `hegselmann-tools` (uv workspace メンバ) は `results/` 配下の Rust 出力を読み，図を生成する．workspace ルートで `uv sync` を一度実行してインストールする．
+Python パッケージ `hegselmann-tools` (uv workspace メンバ) は `results/` 配下の runvault の run ディレクトリを読み，図を生成する．workspace ルートで `uv sync` を一度実行してインストールする．どの run を読むかは `runvault path` に聞く — `results/` を走査したり新しそうなディレクトリを当てにいったりはしない．
 
 ```bash
 uv sync
 uv run hegselmann-tools visualize
 uv run hegselmann-tools visualize-sweep
-uv run hegselmann-tools show-experiment-settings --results-dir results/latest
+uv run hegselmann-tools show-experiment-settings
 uv run hegselmann-tools reproduce
 ```
 
@@ -16,48 +16,53 @@ CLI は argparse で 4 つのサブコマンドへディスパッチする．サ
 
 ## `visualize` — 意見軌跡
 
-`run` 結果 (既定 `results/latest`) の `opinions.csv` と `metrics.csv` を読み，以下を出力する:
+`run` 結果 (既定は最新の 1 本．`runvault path --experiment hegselmann-averaging --latest --subcommand run --standalone` で解決する) の `artifacts/opinions.csv` と `metrics.csv` を読み，以下を出力する:
 
 - `opinion_trajectory.png` — 意見軌跡 (x = 時間，y = 意見 ∈ `[0,1]`，エージェントごとに 1 本の線; 論文 Fig. 3 風)．エージェント数が多い場合は半透明の細線で描き，クラスタが見えるようにする．
 - `metrics_timeseries.png` — 3 パネル: 占有クラス数 (log y)・分散・`max|Δx|` (log y，収束指標)．
 
 ```bash
-uv run hegselmann-tools visualize --results_dir results/latest
+uv run hegselmann-tools visualize --results_dir "$(runvault path --experiment hegselmann-averaging --latest --subcommand run --standalone)"
 ```
 
 | フラグ | 既定値 | 説明 |
 |---|---|---|
-| `--results_dir` | results/latest | run 出力ディレクトリ |
-| `--output_dir` | `{results_dir}/figures` | 図の出力ディレクトリ |
+| `--results_dir` | 最新の `run` | runvault の run ディレクトリ |
+| `--results_root` | results | `--results_dir` 省略時に `runvault path` が探すルート |
+| `--output_dir` | `results/hegselmann-averaging/figures/{run_slug}` | 図の出力ディレクトリ |
 
 ## `visualize-sweep` — 相図・合意ブリンク
 
-`sweep` 結果 (既定 `results/latest`) の `sweep_summary.csv` を読み，以下を出力する:
+スイープの子 run の `events.jsonl` の `terminal` 行から 1 行 1 試行の表を組み直し (散らばりを描くには条件ごとの平均ではなく個々の試行が要る)，以下を出力する:
 
 - `sweep_occupied_classes.png` — 占有クラス数 vs ε，平均演算子ごとに 1 本の曲線 (log y，試行平均 ± 標準偏差のエラーバー付き; 論文 Fig. 4–7 風)．破線が合意境界 (1 クラス) を示す．
 - `sweep_consensus_brink.png` — 平均間で合意ブリンク ε* を比較する棒グラフ (論文 Observation 1, Fact 4)．走査範囲内で合意に到達しない平均は「未到達」と注釈する．
 
 ```bash
-uv run hegselmann-tools visualize-sweep --sweep_dir results/latest
+uv run hegselmann-tools visualize-sweep --sweep_dir "$(runvault path --experiment hegselmann-averaging --latest --subcommand sweep)"
 ```
 
 | フラグ | 既定値 | 説明 |
 |---|---|---|
-| `--sweep_dir` | results/latest | sweep 出力ディレクトリ |
-| `--output_dir` | `{sweep_dir}/figures` | 図の出力ディレクトリ |
+| `--sweep_dir` | 最新の `sweep` | スイープ親 run のディレクトリ |
+| `--results_root` | results | `--sweep_dir` 省略時に `runvault path` が探すルート |
+| `--output_dir` | `results/hegselmann-averaging/figures/{run_slug}` | 図の出力ディレクトリ |
+
+runvault 移行前の `sweep_summary.csv` が残っている結果は，それをそのまま読む．
 
 ## `show-experiment-settings`
 
-results ディレクトリ配下の `config.json` (run) または `sweep_config.json` (sweep) を整形表示する．`results/latest` は実体へ解決される．`--json` で機械可読出力．
+run ディレクトリの実験条件を整形表示する．runvault の `config.json` は封筒なので条件は `parameters` の下から読み，`run` / `sweep` / `sweep-point` のどれかは `run.json` の `subcommand` が答える．runvault 以前の flat な `config.json` と `sweep_config.json` もそのまま読める．`--json` で機械可読出力．
 
 ```bash
-uv run hegselmann-tools show-experiment-settings --results-dir results/latest
-uv run hegselmann-tools show-experiment-settings --results-dir results/latest --json
+uv run hegselmann-tools show-experiment-settings
+uv run hegselmann-tools show-experiment-settings --results-dir "$(runvault path --experiment hegselmann-averaging --latest --subcommand sweep)"
+uv run hegselmann-tools show-experiment-settings --json
 ```
 
 ## `reproduce` — 論文 Figure の一括再現
 
-論文の主要実験を 1 コマンドで横断実行し，図と機械可読なサマリを出力する．Rust バイナリ (`cargo run --release -- run / sweep …`) を連結して呼び出し，生成 CSV を読んで PNG を描き，観測された演算子ごとの相を論文の期待相と突き合わせる．
+論文の主要実験を 1 コマンドで横断実行し，図と機械可読なサマリを出力する．Rust バイナリ (`cargo run --release -- run / sweep …`) を連結して呼び出し，各呼び出しの run がどこに落ちたかを runvault に聞いて読み，PNG を描き，観測された演算子ごとの相を論文の期待相と突き合わせる．
 
 ```bash
 uv run hegselmann-tools reproduce              # 論文値でフル再現 (n=625)

@@ -18,14 +18,14 @@ cargo run --release -- run --n 625 --eps 0.15 --mean A --seed 42
 # Install the Python visualization tools (at the workspace root)
 uv sync
 
-# Visualize the most recent run (opinion trajectory + metrics)
+# Visualize the most recent run (runvault path --latest picks it)
 uv run hegselmann-tools visualize
 ```
 
 ## Documentation
 
 - [Use cases](docs/usecases.md) — what you can do with this project, with pointers to the rest of the docs.
-- [CLI](docs/cli.md) — the Rust CLI: the `run` and `sweep` subcommands and their flags.
+- [CLI](docs/cli.md) — the Rust CLI: the `run` and `sweep` subcommands, their flags, and the runvault run layout under `results/`.
 - [Visualization](docs/visualization.md) — the Python `hegselmann-tools` and how to interpret the outputs.
 - [Architecture](docs/architecture.md) — repository structure, the socsim framework, the averaging operators, and references.
 

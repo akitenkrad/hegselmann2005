@@ -25,7 +25,7 @@ This project reproduces the continuous opinion-dynamics model of Hegselmann & Kr
    uv run hegselmann-tools visualize-sweep
    ```
 
-4. **Study convergence speed.** A/G/H/P stabilize quickly (often under 20 steps), while the random mean R can remain unstable even after thousands of steps. The `metrics.csv` `max_delta` column tracks the per-step maximum opinion change.
+4. **Study convergence speed.** A/G/H/P stabilize quickly (often under 20 steps), while the random mean R can remain unstable even after thousands of steps. The `max_delta` metric in `metrics.csv` tracks the per-step maximum opinion change.
 
 5. **Reproduce the paper's headline figures in one command.** Run `reproduce` to render the operator-comparison grid, the arithmetic three-regime transition, and the ε phase diagram, each checked against the paper's expected per-operator regime. See [Visualization → reproduce](visualization.md).
 

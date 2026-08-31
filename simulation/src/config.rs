@@ -69,39 +69,44 @@ impl Default for Config {
     }
 }
 
-/// `config.json` (run 用) のシリアライズ表現．
+/// `run` の実験条件 (runvault の `config.json` の `parameters` に入る)．
 #[derive(Serialize)]
-pub struct RunConfigJson {
-    pub command: &'static str,
+pub struct RunParameters {
     pub n: usize,
     pub eps: f64,
     pub mean: String,
+    /// べき平均 `P_p` の指数．他の平均では意味を持たないので `None`
+    /// (0 で埋めると「p=0 の P」= 幾何平均という別の条件に見える)．
     pub p: Option<f64>,
     pub start_profile: &'static str,
     pub max_iterations: usize,
     pub tol: f64,
-    pub seed: Option<u64>,
-    pub output_dir: String,
+    pub seed: u64,
 }
 
 impl Config {
-    /// `config.json` 用の表現を組み立てる．
-    pub fn to_run_config_json(&self) -> RunConfigJson {
-        let p = match self.mean {
-            MeanOperator::Power(p) => Some(p),
-            _ => None,
-        };
-        RunConfigJson {
-            command: "run",
+    /// runvault の `config.json` に入れる実験条件を組み立てる．
+    ///
+    /// 出力先は run ディレクトリそのものなので条件ではない (旧 `config.json` が
+    /// 持っていた `output_dir` / `command` は runvault 側の `run.json` に
+    /// `subcommand` として入るため，ここからは落とす)．
+    ///
+    /// `seed` は `Option` ではなく実体化した値を受け取る．`--seed` 省略時に
+    /// シミュレーション側で `rand::random` に落とすと，実際に使われたシードが
+    /// どこにも残らないため，呼び出し側が先に確定させる．
+    pub fn to_parameters(&self, seed: u64) -> RunParameters {
+        RunParameters {
             n: self.n,
             eps: self.eps,
             mean: self.mean.label(),
-            p,
+            p: match self.mean {
+                MeanOperator::Power(p) => Some(p),
+                _ => None,
+            },
             start_profile: self.start_profile.label(),
             max_iterations: self.max_iterations,
             tol: self.tol,
-            seed: self.seed,
-            output_dir: self.output_dir.clone(),
+            seed,
         }
     }
 }

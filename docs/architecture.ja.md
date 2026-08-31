@@ -15,11 +15,12 @@ hegselmann2005/
 │   ├── src/
 │   │   ├── main.rs            # CLI (run / sweep)
 │   │   ├── lib.rs             # バイナリ + 統合テスト用のモジュール再エクスポート
-│   │   ├── config.rs          # Config + config.json シリアライズ
+│   │   ├── config.rs          # Config + runvault の parameters シリアライズ
 │   │   ├── means.rs           # MeanOperator enum (A/G/H/P/R) + apply_mean + パーサ
 │   │   ├── world.rs           # socsim WorldState 実装 (OpinionWorld，完全グラフ)
 │   │   ├── mechanisms.rs      # socsim Mechanism 実装 (BoundedConfidenceUpdate，同期更新)
 │   │   ├── metrics.rs         # 占有クラス数・相分類・合意ブリンク
+│   │   ├── record.rs          # runvault への記録 (論文メタデータ / 指標 / 終端イベント)
 │   │   └── simulation.rs      # init + run ドライバ (SimulationBuilder 配線)
 │   └── tests/
 │       └── integration_test.rs
@@ -27,10 +28,11 @@ hegselmann2005/
 │   ├── pyproject.toml
 │   └── src/hegselmann_tools/
 │       ├── cli.py                       # 統合 CLI (hegselmann-tools)
+│       ├── experiment.py                # runvault 上の実験名 (1 箇所に置く)
 │       ├── visualize.py                 # 意見軌跡 + メトリクス
 │       ├── visualize_sweep.py           # 占有クラス数の相図 + 合意ブリンク
 │       └── show_experiment_settings.py  # run / sweep 設定の表示
-└── results/                   # 実行時生成 (gitignore)
+└── results/                   # runvault の run ディレクトリ (gitignore)
 ```
 
 - `cargo run` は workspace ルートから `simulation` クレートを起動する．
@@ -38,7 +40,7 @@ hegselmann2005/
 
 ## socsim フレームワーク上のモデル
 
-シミュレーションエンジンは社会シミュレーション基盤 [rs-social-simulation-tools](https://github.com/akitenkrad/rs-social-simulation-tools) (socsim) 上に構築する (git 依存，commit は `Cargo.lock` で固定)．正準の Hegselmann–Krause モデルは**完全グラフ・非空間**モデルであるため，`socsim-core` (traits) と `socsim-engine` (Simulation / Builder) のみを使い，**`socsim-grid` も `socsim-net` も使わない**．
+シミュレーションエンジンは社会シミュレーション基盤 [rs-social-simulation-tools](https://github.com/akitenkrad/rs-social-simulation-tools) (socsim) 上に構築する (git 依存，commit は `Cargo.lock` で固定)．正準の Hegselmann–Krause モデルは**完全グラフ・非空間**モデルであるため，`socsim-core` (traits)・`socsim-engine` (Simulation / Builder)・`socsim-mechanisms` (HK / 平均パック) のみを使い，**`socsim-grid` も `socsim-net` も使わない**．出力の置き場と同一性は [runvault](https://github.com/akitenkrad/rs-runvault) が持つので，`socsim-results` (タイムスタンプ・`latest` シンボリックリンク・CSV/JSON 書き出し) も使わない．
 
 使用する socsim API:
 

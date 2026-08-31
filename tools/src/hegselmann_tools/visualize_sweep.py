@@ -2,13 +2,17 @@
 """
 visualize_sweep.py — Hegselmann & Krause (2005) 意見力学 スイープ結果 可視化スクリプト
 
-results/latest (または --sweep_dir 指定先) の sweep_summary.csv を読み，
 平均ごとに「占有クラス数 vs ε」の相図と，平均間の合意ブリンク比較を生成する
 (論文 Fig. 4–7 風)．占有クラス数は試行平均±標準偏差で描く．
 
+1 行 1 試行の表は，スイープ親 run の子 (`subcommand=sweep-point`) の
+`events.jsonl` から組み直す．散らばり (±1σ) を描くには条件ごとの平均ではなく
+個々の試行が要るので，子 run の run スコープ集約ではなく終端イベントを読む．
+runvault 以前の `sweep_summary.csv` もそのまま読める．
+
 Usage:
     uv run hegselmann-tools visualize-sweep
-    uv run hegselmann-tools visualize-sweep --sweep_dir results/20260524_160000_sweep
+    uv run hegselmann-tools visualize-sweep --sweep_dir "$(runvault path --experiment hegselmann-averaging --latest --subcommand sweep)"
 
 Outputs:
     output_dir/
@@ -24,6 +28,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from runvault.read import figures_dir, runvault_path, sweep_events_table
+
+from hegselmann_tools.experiment import EXPERIMENT
 
 # --------------------------------------------------------------------------- #
 # 日本語フォント設定
@@ -56,11 +63,29 @@ def color_for(mean: str, idx: int) -> str:
 # --------------------------------------------------------------------------- #
 
 def load_summary(sweep_dir: str) -> pd.DataFrame:
-    """sweep_summary.csv を読み込む．"""
-    path = os.path.join(sweep_dir, "sweep_summary.csv")
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"sweep_summary.csv が見つかりません: {path}")
-    return pd.read_csv(path)
+    """1 行 1 試行の表 (`mean`, `eps`, `run`, 最終メトリクス) を返す．
+
+    runvault はこの表をディスクに持たないので，スイープ親の子 run の終端イベント
+    から組み直す．条件を表す列は子の `parameters` にある `mean` (平均演算子) と
+    `eps` の 2 本で，`unit_id` (`trial-<i>`) は旧 `sweep_summary.csv` の `run` 列
+    に直す．
+
+    `phase` は旧 CSV では 1/2/3 のコードだったが，終端イベントでは
+    consensus/polarization/plurality のラベルそのものが入る (相はもともと
+    category なので，こちらが正しい形である)．本スクリプトは `phase` を使わない．
+
+    runvault 以前のスイープには `sweep_summary.csv` が残っているので，あればそちら
+    を読む．そちらが正本だった時期の結果を読めなくする理由はない．
+    """
+    legacy = os.path.join(sweep_dir, "sweep_summary.csv")
+    if os.path.exists(legacy):
+        return pd.read_csv(legacy)
+
+    df = sweep_events_table(sweep_dir, ["mean", "eps"], kind="terminal")
+    df["run"] = df["unit_id"].str.removeprefix("trial-").astype(int)
+    df["converged"] = ~df["censored"]
+    df["final_iteration"] = df["t"]
+    return df
 
 
 def aggregate(df: pd.DataFrame) -> pd.DataFrame:
@@ -163,12 +188,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description="Hegselmann-Krause 意見力学 スイープ結果 可視化スクリプト",
     )
     p.add_argument(
-        "--sweep_dir", "--sweep-dir", default="results/latest",
-        help="スイープ出力ディレクトリ (default: results/latest)",
+        "--sweep_dir", "--sweep-dir", "--results_dir", "--results-dir", default=None,
+        help=(
+            "スイープ親 run のディレクトリ．未指定時は runvault に最新のスイープを "
+            f"聞く (--experiment {EXPERIMENT} --subcommand sweep)．"
+        ),
+    )
+    p.add_argument(
+        "--results_root", "--results-root", default="results",
+        help="--sweep_dir 未指定時に runvault が探す results ルート (default: results)",
     )
     p.add_argument(
         "--output_dir", "--output-dir", default=None,
-        help="図の保存先ディレクトリ (default: {sweep_dir}/figures)",
+        help=(
+            "図の保存先ディレクトリ "
+            f"(default: results/{EXPERIMENT}/figures/{{run_slug}})"
+        ),
     )
     return p.parse_args(argv)
 
@@ -176,16 +211,20 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
 
-    out_dir = args.output_dir if args.output_dir else os.path.join(args.sweep_dir, "figures")
+    sweep_dir = args.sweep_dir
+    if sweep_dir is None:
+        sweep_dir = runvault_path(EXPERIMENT, args.results_root, subcommand="sweep")
+
+    out_dir = args.output_dir if args.output_dir else figures_dir(sweep_dir)
     os.makedirs(out_dir, exist_ok=True)
 
     print("=== Hegselmann-Krause 意見力学 スイープ可視化 ===")
-    print(f"スイープ: {args.sweep_dir}")
+    print(f"スイープ: {sweep_dir}")
     print(f"出力先:   {out_dir}")
     print("-------------------------------------------------")
 
-    print("[1/3] sweep_summary.csv を読み込み中 ...")
-    df = load_summary(args.sweep_dir)
+    print("[1/3] 子 run の終端イベントから 1 行 1 試行の表を組み立て中 ...")
+    df = load_summary(sweep_dir)
     agg = aggregate(df)
     eps_max = float(df["eps"].max())
     print(f"      平均 {df['mean'].nunique()} 種 × ε {df['eps'].nunique()} 値")
