@@ -17,7 +17,7 @@ use hegselmann_opinion_simulation::config::{parse_start_profile, Config};
 use hegselmann_opinion_simulation::means::{parse_mean, MeanOperator};
 use hegselmann_opinion_simulation::metrics::{consensus_brink, Phase};
 use hegselmann_opinion_simulation::record::{self, DOMAIN, EXPERIMENT, REPO_ID};
-use hegselmann_opinion_simulation::simulation::{run, save_opinions};
+use hegselmann_opinion_simulation::simulation::{run, run_observed, save_opinions};
 
 // ---------------------------------------------------------------------------
 // CLI 定義
@@ -251,7 +251,23 @@ fn cmd_run(args: RunArgs) {
     println!("出力先: {}", rv.dir().display());
     println!("-------------------------------------------");
 
-    let result = run(&cfg);
+    // 進捗の 1 単位は 1 反復．費用がそこにあり (1 反復で全エージェントの信頼集合と
+    // その平均を計算し直すので n に対して二次)，かつ run の試行は 1 本しかないので，
+    // 試行を単位にすると最初の行から最後の行まで何も出ない．
+    //
+    // 分母を持てるかは平均で決まる．R (ランダム平均) には ConvergenceMechanism が
+    // 配線されていないので必ず max_iterations 回まわり，反復数は走らせる前に分かる．
+    // 決定論的な平均は不動点で止まるので何反復で終わるか分からず，上限を分母に
+    // 置けば «届かない分母» になり，見積もりは最後まで数倍長いままになる．
+    let mut stage = if cfg.mean.is_deterministic() {
+        rv.unbounded_stage("iterations")
+    } else {
+        rv.stage("iterations", cfg.max_iterations)
+    };
+    let result = run_observed(&cfg, |_| stage.tick());
+    // manifest.csv は finish() で封をされる．その後に 1 行足せば，manifest が
+    // 食い違うダイジェストを持つことになる．
+    stage.close();
     save_opinions(&result.opinion_history, &cfg.output_dir);
     record::log_simulation(&mut rv, &result);
     // run は全ステップを観測して metrics.csv に残しているので，観測時刻も全ステップ．
@@ -358,6 +374,17 @@ fn cmd_sweep(args: SweepArgs) {
     let mut done = 0usize;
 
     for mean in &means {
+        // 平均ごとに別の stage にする．R (ランダム平均) には ConvergenceMechanism が
+        // 配線されていないので必ず max_iterations 回まわり，決定論的な平均は不動点で
+        // 早期に止まる．同じグリッド (ε 11 点 × 10 試行) の実測で A が 5.03s，R が
+        // 28.06s と 5.6 倍違う．しかも既定の `--means` では R が最後に来るので，
+        // 1 つの stage にまとめると前半 5 つの平均から外挿した見積もりが，まだ
+        // 残っている R の分を数分ぶん短く言うことになる．
+        //
+        // 分けた中では 1 試行の費用が揃うので，重みではなく数える．単位が反復では
+        // なく試行なのは，1 試行が何反復で終わるかは走らせるまで分からないため —
+        // 反復を分母に取ると決して届かない上限になる．試行の数は正確に分かる．
+        let mut stage = parent.stage(&mean.label(), epss.len() * args.runs);
         for &eps in &epss {
             let params = SweepPointParameters {
                 n: args.n,
@@ -429,6 +456,7 @@ fn cmd_sweep(args: SweepArgs) {
                 trials.push(record::TrialOutcome::from_result(&result));
 
                 done += 1;
+                stage.tick();
             }
             record::log_condition_summary(&mut child, &trials);
 
@@ -451,6 +479,7 @@ fn cmd_sweep(args: SweepArgs) {
                 mean_n_occupied,
             );
         }
+        stage.close();
     }
 
     let dir = parent
