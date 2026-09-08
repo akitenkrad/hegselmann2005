@@ -1,0 +1,90 @@
+# 指標が何を測っているか (runvault の宣言．rs-runvault docs/metrics.ja.md)．
+#
+# 名前は `simulation/src/record.rs` が書いているものと一致していなければならない．
+# ステップごとの指標 (`log_step`) と，試行群をまとめた指標 (`log_condition_summary`)
+# の両方をここに置く．
+#
+# `direction` は «どちらが良いか»．占有クラス数や意見分散は模型の記述であって成績では
+# ないので `none` を書く．例外は `convergence_rate` (試行がどれだけ使い物になったか)．
+
+# --- ステップごと (scope=run, step=t) -------------------------------------
+
+[metrics."n_occupied_classes"]
+meaning   = "そのステップで占有されている意見クラスの数．1 なら合意，2 なら分極，3 以上なら多元"
+unit      = "count"
+direction = "none"
+scope     = ["run"]
+
+[metrics."mean"]
+meaning   = "全エージェントの意見の平均"
+unit      = "ratio"
+direction = "none"
+range     = [0.0, 1.0]
+scope     = ["run"]
+
+[metrics."variance"]
+meaning   = "全エージェントの意見の分散"
+unit      = "ratio"
+direction = "none"
+scope     = ["run"]
+
+[metrics."max_delta"]
+meaning   = "1 ステップでの意見の変化量の最大値．収束判定に使う"
+unit      = "ratio"
+direction = "none"
+scope     = ["run"]
+
+# --- 試行 1 本ぶん (scope=run) ---------------------------------------------
+
+[metrics."converged"]
+meaning   = "収束して終わったなら 1，打ち切りなら 0"
+unit      = "boolean"
+direction = "none"
+range     = [0.0, 1.0]
+scope     = ["run"]
+
+[metrics."final_iteration"]
+meaning   = "停止したときの反復回数"
+unit      = "count"
+direction = "none"
+scope     = ["run"]
+
+# --- 条件ごとの集計 (試行群の平均．scope=run) -------------------------------
+
+[metrics."n_converged"]
+meaning   = "この条件の試行のうち収束したものの本数"
+unit      = "count"
+direction = "none"
+scope     = ["run"]
+
+[metrics."convergence_rate"]
+meaning   = "この条件の試行のうち収束したものの割合"
+unit      = "ratio"
+direction = "up"
+range     = [0.0, 1.0]
+scope     = ["run"]
+
+[metrics."mean_n_occupied_classes"]
+meaning   = "試行群にわたる，最終的な占有クラス数の平均．平均作用素を変えるとここが動く (本再現の主張)"
+unit      = "count"
+direction = "none"
+scope     = ["run"]
+
+[metrics."mean_opinion_mean"]
+meaning   = "試行群にわたる最終意見平均の平均"
+unit      = "ratio"
+direction = "none"
+range     = [0.0, 1.0]
+scope     = ["run"]
+
+[metrics."mean_opinion_variance"]
+meaning   = "試行群にわたる最終意見分散の平均"
+unit      = "ratio"
+direction = "none"
+scope     = ["run"]
+
+[metrics."mean_final_iteration"]
+meaning   = "試行群にわたる，収束までの反復回数の平均"
+unit      = "count"
+direction = "none"
+scope     = ["run"]
