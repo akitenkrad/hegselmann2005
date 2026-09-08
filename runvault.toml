@@ -88,3 +88,52 @@ meaning   = "試行群にわたる，収束までの反復回数の平均"
 unit      = "count"
 direction = "none"
 scope     = ["run"]
+
+# --- 条件（parameters）の説明 -----------------------------------------------
+#
+# 鍵は JSON ポインタ．`config.json` の `/parameters` からの相対で指す．
+
+[parameters."/n"]
+meaning = "エージェント数 n"
+unit    = "count"
+
+[parameters."/eps"]
+meaning = "対称信頼幅 ε"
+range   = [0.0, 1.0]
+
+[parameters."/mean"]
+meaning = "平均化操作．A（算術）/ G（幾何）/ H（調和）/ P{p}（べき）/ R（この論文が比べる作用素）"
+
+[parameters."/p"]
+meaning = "べき平均 P_p の指数．他の平均では意味を持たないので null（0 で埋めると «p=0 の P» ＝ 幾何平均という別の条件に見える）"
+
+[parameters."/start_profile"]
+meaning = "初期意見の作り方．`uniform` は [0,1] の一様乱数（調和・幾何平均では開区間）"
+
+[parameters."/max_iterations"]
+meaning = "反復の上限 T"
+unit    = "count"
+
+[parameters."/tol"]
+meaning = "収束判定の許容誤差．max|Δx| がこれを下回ったら止める（R では使わない）"
+
+[parameters."/runs"]
+meaning = "この条件で走らせる独立試行の本数"
+unit    = "count"
+
+[parameters."/seed"]
+meaning = "試行のシードを派生させる基準の乱数種"
+
+# --- sweep 親のグリッド定義 --------------------------------------------------
+
+[parameters."/eps_min"]
+meaning = "sweep が振る ε の下端"
+
+[parameters."/eps_max"]
+meaning = "sweep が振る ε の上端"
+
+[parameters."/eps_step"]
+meaning = "ε の刻み幅"
+
+[parameters."/means"]
+meaning = "sweep が比べる平均化作用素の並び（A / G / H / P{p} / R）"
