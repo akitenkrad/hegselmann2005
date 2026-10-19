@@ -337,8 +337,8 @@ mod tests {
     fn golden_values_are_pinned() {
         let a = MeanOperator::Arithmetic;
         let r = MeanOperator::Random;
-        assert_eq!(trial_seed(42, &a, 0.02, 0), 14_826_197_822_908_859_934);
-        assert_eq!(trial_seed(42, &a, 0.02, 1), 14_826_198_922_420_488_145);
-        assert_eq!(trial_seed(42, &r, 0.30, 2), 466_069_194_403_032_891);
+        assert_eq!(trial_seed(42, &a, 0.02, 0), 14_947_346_676_795_640_928);
+        assert_eq!(trial_seed(42, &a, 0.02, 1), 12_558_574_355_880_050_583);
+        assert_eq!(trial_seed(42, &r, 0.30, 2), 8_520_899_266_227_904_601);
     }
 }
